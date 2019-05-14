@@ -2,6 +2,7 @@ package com.har01d.hrpc;
 
 import com.har01d.hrpc.core.Message;
 import com.har01d.hrpc.core.RPC;
+import com.har01d.hrpc.exception.ServerException;
 import com.har01d.hrpc.util.ClassFinder;
 
 import java.io.*;
@@ -72,6 +73,8 @@ public class RPCServer {
              OutputStream os = socket.getOutputStream()) {
             Message message = (Message) ois.readObject();
             handleRequest(message, os);
+        } catch (ServerException e) {
+            System.err.println(e.getMessage());
         } catch (IOException e) {
             // TODO:
         } catch (ClassNotFoundException e) {
@@ -82,7 +85,7 @@ public class RPCServer {
     private void handleRequest(Message message, OutputStream os) throws IOException {
         Class<?> clazz = registration.get(message.getService());
         if (clazz == null) {
-            throw new RuntimeException("Invalid service " + message.getService());
+            throw new ServerException("Invalid service " + message.getService());
         }
 
         Object service = services.get(message.getService());
@@ -90,7 +93,7 @@ public class RPCServer {
             try {
                 service = clazz.newInstance();
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException("Cannot create service " + message.getService());
+                throw new ServerException("Cannot create service " + message.getService());
             }
             services.put(message.getService(), service);
         }
@@ -104,14 +107,14 @@ public class RPCServer {
             }
             method = clazz.getMethod(message.getMethod(), parameterTypes);
         } catch (NoSuchMethodException e) {
-            throw new RuntimeException("Invalid method " + message.getService() + "." + message.getMethod());
+            throw new ServerException("Invalid method " + message.getService() + "." + message.getMethod());
         }
 
         Object result;
         try {
             result = method.invoke(service, message.getArguments());
         } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException("Cannot invoke method " + message.getService() + "." + message.getMethod());
+            throw new ServerException("Cannot invoke method " + message.getService() + "." + message.getMethod());
         }
 
         ObjectOutputStream oos = new ObjectOutputStream(os);
