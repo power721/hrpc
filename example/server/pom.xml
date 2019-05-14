@@ -12,6 +12,10 @@
     <groupId>com.har01d.hrpc.example</groupId>
     <artifactId>server</artifactId>
 
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.har01d.hrpc.example</groupId>
@@ -19,5 +23,19 @@
             <version>1.0</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

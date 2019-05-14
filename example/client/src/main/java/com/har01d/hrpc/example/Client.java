@@ -7,7 +7,12 @@ public class Client {
         RPCClient stub = new RPCClient();
         GreetingService greetingService = stub.getService(GreetingService.class);
 
-        System.out.println(greetingService.hello("Harold"));
+        String name = "Harold";
+        if (args.length > 0) {
+            name = args[0];
+        }
+
         System.out.println(greetingService.hello("world"));
+        System.out.println(greetingService.hello(name));
     }
 }
