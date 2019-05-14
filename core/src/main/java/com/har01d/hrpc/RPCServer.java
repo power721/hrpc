@@ -11,8 +11,10 @@ import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class RPCServer {
+    private static final Logger logger = Logger.getLogger(RPCServer.class.getName());
     private static final int DEFAULT_PORT = 9807;
     private int port = DEFAULT_PORT;
     private boolean isRunning = false;
@@ -37,7 +39,7 @@ public class RPCServer {
         Set<Class<?>> services = new HashSet<>();
 
         for (Class<?> clazz : classes) {
-            System.out.println(clazz.getName());
+            logger.finer(clazz.getName());
             RPC rpc = clazz.getAnnotation(RPC.class);
             if (rpc != null) {
                 services.add(clazz);
@@ -52,7 +54,7 @@ public class RPCServer {
             Class<?>[] interfaces = clazz.getInterfaces();
             for (Class<?> intf : interfaces) {
                 if (services.contains(intf)) {
-                    System.out.println("add service implementation: " + clazz.getName() + " -> " + intf.getName());
+                    logger.fine("add service implementation: " + clazz.getName() + " -> " + intf.getName());
                     registration.put(intf.getName(), clazz);
                 }
             }
@@ -61,7 +63,7 @@ public class RPCServer {
 
     public void run() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("Listening on " + serverSocket.getLocalSocketAddress());
+        logger.info("Listening on " + serverSocket.getLocalSocketAddress());
         isRunning = true;
         while (isRunning) {
             Socket socket = serverSocket.accept();
@@ -70,14 +72,14 @@ public class RPCServer {
     }
 
     private void handleSocket(Socket socket) {
-        System.out.println("Receive " + socket);
+        logger.fine("Receive " + socket);
         try (InputStream is = socket.getInputStream();
              OutputStream os = socket.getOutputStream()) {
             ObjectInputStream ois = new ObjectInputStream(is);
             Message message = (Message) ois.readObject();
             handleRequest(message, os);
         } catch (ServerException e) {
-            System.err.println(e.getMessage());
+            logger.warning(e.getMessage());
         } catch (IOException e) {
             // TODO:
         } catch (ClassNotFoundException e) {
@@ -120,7 +122,6 @@ public class RPCServer {
             throw new ServerException("Cannot invoke method " + message.getService() + "." + message.getMethod());
         }
 
-        System.out.println(result);
         ObjectOutputStream oos = new ObjectOutputStream(os);
         oos.writeObject(result);
     }
