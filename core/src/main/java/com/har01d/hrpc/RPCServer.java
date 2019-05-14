@@ -11,6 +11,8 @@ import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class RPCServer {
@@ -18,6 +20,8 @@ public class RPCServer {
     private static final int DEFAULT_PORT = 9807;
     private int port = DEFAULT_PORT;
     private boolean isRunning = false;
+    private int nThreads = Runtime.getRuntime().availableProcessors();
+    private Executor executor;
     private Map<String, Class<?>> registration = new HashMap<>();
     private Map<String, Object> services = new HashMap<>();
 
@@ -29,6 +33,7 @@ public class RPCServer {
     }
 
     public void start() throws IOException {
+        executor = Executors.newFixedThreadPool(nThreads);
         scanService();
         run();
     }
@@ -61,7 +66,7 @@ public class RPCServer {
         }
     }
 
-    public void run() throws IOException {
+    private void run() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
         logger.info("Listening on " + serverSocket.getLocalSocketAddress());
         isRunning = true;
@@ -72,19 +77,21 @@ public class RPCServer {
     }
 
     private void handleSocket(Socket socket) {
-        logger.fine("Receive " + socket);
-        try (InputStream is = socket.getInputStream();
-             OutputStream os = socket.getOutputStream()) {
-            ObjectInputStream ois = new ObjectInputStream(is);
-            Message message = (Message) ois.readObject();
-            handleRequest(message, os);
-        } catch (ServerException e) {
-            logger.warning(e.getMessage());
-        } catch (IOException e) {
-            // TODO:
-        } catch (ClassNotFoundException e) {
-            // TODO:
-        }
+        executor.execute(() -> {
+            logger.fine("Receive " + socket);
+            try (InputStream is = socket.getInputStream();
+                 OutputStream os = socket.getOutputStream()) {
+                ObjectInputStream ois = new ObjectInputStream(is);
+                Message message = (Message) ois.readObject();
+                handleRequest(message, os);
+            } catch (ServerException e) {
+                logger.warning(e.getMessage());
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            } catch (ClassNotFoundException e) {
+                logger.warning(e.getMessage());
+            }
+        });
     }
 
     private void handleRequest(Message message, OutputStream os) throws IOException {
