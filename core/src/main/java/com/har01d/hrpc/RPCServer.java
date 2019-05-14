@@ -2,14 +2,19 @@ package com.har01d.hrpc;
 
 import com.har01d.hrpc.util.ClassFinder;
 
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 
 public class RPCServer {
     private static final int DEFAULT_PORT = 9807;
     private int port = DEFAULT_PORT;
     private boolean isRunning = false;
-    private Map<String, Class<?>> registration = new HashMap<String, Class<?>>();
+    private Map<String, Class<?>> registration = new HashMap<>();
+    private Map<String, Object> services = new HashMap<>();
 
     public RPCServer() {
     }
@@ -25,7 +30,7 @@ public class RPCServer {
     private void scanService() throws IOException {
         ClassFinder finder = new ClassFinder();
         List<Class<?>> classes = finder.scanClasses();
-        Set<Class<?>> services = new HashSet<Class<?>>();
+        Set<Class<?>> services = new HashSet<>();
 
         for (Class<?> clazz : classes) {
             System.out.println(clazz.getName());
@@ -50,10 +55,64 @@ public class RPCServer {
         }
     }
 
-    public void run() {
+    public void run() throws IOException {
+        ServerSocket serverSocket = new ServerSocket(port);
         while (isRunning) {
-
+            Socket socket = serverSocket.accept();
+            handleSocket(socket);
         }
+    }
+
+    private void handleSocket(Socket socket) {
+        try (InputStream is = socket.getInputStream();
+             ObjectInputStream ois = new ObjectInputStream(is);
+             OutputStream os = socket.getOutputStream()) {
+            Message message = (Message) ois.readObject();
+            handleRequest(message, os);
+        } catch (IOException e) {
+            // TODO:
+        } catch (ClassNotFoundException e) {
+            // TODO:
+        }
+    }
+
+    private void handleRequest(Message message, OutputStream os) throws IOException {
+        Class<?> clazz = registration.get(message.getService());
+        if (clazz == null) {
+            throw new RuntimeException("Invalid service " + message.getService());
+        }
+
+        Object service = services.get(message.getService());
+        if (service == null) {
+            try {
+                service = clazz.newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException("Cannot create service " + message.getService());
+            }
+            services.put(message.getService(), service);
+        }
+
+        Method method;
+        try {
+            Object[] arguments = message.getArguments();
+            Class<?>[] parameterTypes = new Class<?>[arguments.length];
+            for (int i = 0; i < arguments.length; ++i) {
+                parameterTypes[i] = arguments[i].getClass();
+            }
+            method = clazz.getMethod(message.getMethod(), parameterTypes);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Invalid method " + message.getService() + "." + message.getMethod());
+        }
+
+        Object result;
+        try {
+            result = method.invoke(service, message.getArguments());
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Cannot invoke method " + message.getService() + "." + message.getMethod());
+        }
+
+        ObjectOutputStream oos = new ObjectOutputStream(os);
+        oos.writeObject(result);
     }
 
     public void stop() {
