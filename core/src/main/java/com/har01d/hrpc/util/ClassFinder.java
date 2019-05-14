@@ -10,6 +10,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class ClassFinder {
+    private boolean skipJre = true;
+
+    public void setSkipJre(boolean skipJre) {
+        this.skipJre = skipJre;
+    }
 
     public List<Class<?>> scanClasses() {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -27,7 +32,7 @@ public class ClassFinder {
             if (file.isDirectory()) {
                 scanClassFile(file, file, cl, classes);
             } else if (path.toLowerCase().endsWith(".jar")) {
-                if (path.contains("/jre/lib/")) { // skip jre
+                if (skipJre && path.contains("/jre/lib/")) { // skip jre
                     continue;
                 }
                 scanJarFile(file, cl, classes);
