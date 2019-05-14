@@ -12,26 +12,26 @@ public class ClassFinder {
     public List<Class<?>> scanClasses() throws IOException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         if (cl == null) {
-            cl = this.getClass().getClassLoader();
+            cl = ClassLoader.getSystemClassLoader();
         }
 
-        List<Class<?>> classes = new ArrayList<Class<?>>();
+        List<Class<?>> classes = new ArrayList<>();
         Enumeration<URL> enumeration = cl.getResources("");
         while (enumeration.hasMoreElements()) {
             URL url = enumeration.nextElement();
             File root = new File(url.getPath());
-            scanClasses(root, root, classes);
+            scanClasses(root, root, cl, classes);
         }
 
         return classes;
     }
 
-    private void scanClasses(File root, File directory, List<Class<?>> classes) {
+    private void scanClasses(File root, File directory, ClassLoader loader, List<Class<?>> classes) {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    scanClasses(root, file, classes);
+                    scanClasses(root, file, loader, classes);
                 } else {
                     if (file.getName().endsWith(".class")) {
                         String path = file.getAbsolutePath().replace(".class", "");
@@ -42,9 +42,9 @@ public class ClassFinder {
 
                         String className = path.replace(File.separator, ".");
                         try {
-                            Class<?> clazz = Class.forName(className);
+                            Class<?> clazz = Class.forName(className, false, loader);
                             classes.add(clazz);
-                        } catch (ClassNotFoundException e) {
+                        } catch (ClassNotFoundException | SecurityException e) {
                             // ignore
                         }
                     } else if (file.getName().endsWith(".jar")) {
