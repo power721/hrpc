@@ -38,9 +38,10 @@ public class RPCServer {
         run();
     }
 
-    private void scanService() throws IOException {
+    private void scanService() {
         ClassFinder finder = new ClassFinder();
         List<Class<?>> classes = finder.scanClasses();
+        logger.fine("Find " + classes.size() + " classes.");
         Set<Class<?>> services = new HashSet<>();
 
         for (Class<?> clazz : classes) {
@@ -64,6 +65,9 @@ public class RPCServer {
                 }
             }
         }
+
+        logger.fine("Find " + services.size() + " services.");
+        logger.fine("Find " + registration.size() + " implementation.");
     }
 
     private void run() throws IOException {
