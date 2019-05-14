@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class Message implements Serializable {
-    private int version;
+    private int version = 1;
     private String service;
     private String method;
     private Object[] arguments;

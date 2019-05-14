@@ -61,6 +61,8 @@ public class RPCServer {
 
     public void run() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("Listening on " + serverSocket.getLocalSocketAddress());
+        isRunning = true;
         while (isRunning) {
             Socket socket = serverSocket.accept();
             handleSocket(socket);
@@ -68,9 +70,10 @@ public class RPCServer {
     }
 
     private void handleSocket(Socket socket) {
+        System.out.println("Receive " + socket);
         try (InputStream is = socket.getInputStream();
-             ObjectInputStream ois = new ObjectInputStream(is);
              OutputStream os = socket.getOutputStream()) {
+            ObjectInputStream ois = new ObjectInputStream(is);
             Message message = (Message) ois.readObject();
             handleRequest(message, os);
         } catch (ServerException e) {
@@ -117,6 +120,7 @@ public class RPCServer {
             throw new ServerException("Cannot invoke method " + message.getService() + "." + message.getMethod());
         }
 
+        System.out.println(result);
         ObjectOutputStream oos = new ObjectOutputStream(os);
         oos.writeObject(result);
     }

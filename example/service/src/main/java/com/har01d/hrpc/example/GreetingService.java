@@ -1,4 +1,4 @@
-package com.har01d.example;
+package com.har01d.hrpc.example;
 
 import com.har01d.hrpc.core.RPC;
 

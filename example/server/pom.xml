@@ -3,19 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>hrpc-example</artifactId>
-        <groupId>com.har01d</groupId>
+        <artifactId>example</artifactId>
+        <groupId>com.har01d.hrpc</groupId>
         <version>1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.har01d.example</groupId>
+    <groupId>com.har01d.hrpc.example</groupId>
     <artifactId>server</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>com.har01d</groupId>
-            <artifactId>hrpc-core</artifactId>
+            <groupId>com.har01d.hrpc.example</groupId>
+            <artifactId>service</artifactId>
+            <version>1.0</version>
         </dependency>
     </dependencies>
 

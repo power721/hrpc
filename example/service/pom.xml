@@ -10,13 +10,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.har01d.hrpc.example</groupId>
-    <artifactId>client</artifactId>
+    <artifactId>service</artifactId>
 
     <dependencies>
         <dependency>
-            <groupId>com.har01d.hrpc.example</groupId>
-            <artifactId>service</artifactId>
-            <version>1.0</version>
+            <groupId>com.har01d</groupId>
+            <artifactId>hrpc-core</artifactId>
         </dependency>
     </dependencies>
 
