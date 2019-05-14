@@ -1,5 +1,7 @@
 package com.har01d.hrpc;
 
+import com.har01d.hrpc.core.Message;
+import com.har01d.hrpc.core.RPC;
 import com.har01d.hrpc.util.ClassFinder;
 
 import java.io.*;
@@ -25,6 +27,7 @@ public class RPCServer {
 
     public void start() throws IOException {
         scanService();
+        run();
     }
 
     private void scanService() throws IOException {

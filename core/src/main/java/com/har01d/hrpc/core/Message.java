@@ -1,4 +1,4 @@
-package com.har01d.hrpc;
+package com.har01d.hrpc.core;
 
 import java.io.Serializable;
 import java.util.Arrays;
